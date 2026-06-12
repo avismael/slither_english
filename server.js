@@ -338,6 +338,7 @@ function updatePlayer(player, dt) {
 
   const diff = normalizeAngle(player.desiredAngle - player.angle);
   player.angle += clamp(diff, -cfg.turnRate, cfg.turnRate);
+  if (!player.isBot && Date.now() - player.lastInputAt > 350) player.boosting = false;
   const canBoost = player.boosting && player.targetLength > player.baseLength * 0.82;
   const speed = playerSpeed(player) * (canBoost ? BOOST_MULTIPLIER : 1);
   if (canBoost) player.targetLength = Math.max(player.baseLength * 0.82, player.targetLength - BOOST_LENGTH_COST * dt);
@@ -568,6 +569,7 @@ io.on("connection", (socket) => {
   socket.on("playerInput", (input = {}) => {
     const player = players.get(socket.id);
     if (!player) return;
+    if (paused) return;
     const now = Date.now();
     if (now - player.lastInputAt < 16) return;
     player.lastInputAt = now;

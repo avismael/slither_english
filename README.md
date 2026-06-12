@@ -88,15 +88,15 @@ fly auth login
 El archivo `fly.toml` ya esta incluido. El nombre configurado es:
 
 ```text
-slither-english-multiplayer
+slither-english
 ```
 
-Si ese nombre ya esta ocupado, cambia `app = "slither-english-multiplayer"` en `fly.toml` por otro nombre unico.
+Si ese nombre ya esta ocupado, cambia `app = "slither-english"` en `fly.toml` por otro nombre unico.
 
 Crear la app usando la configuracion existente:
 
 ```bash
-fly apps create slither-english-multiplayer
+fly apps create slither-english
 ```
 
 Si usas otro nombre, usa ese nombre tambien en el comando.
@@ -116,7 +116,7 @@ fly open
 O usar la URL:
 
 ```text
-https://slither-english-multiplayer.fly.dev
+https://slither-english.fly.dev
 ```
 
 ## Configuracion De Fly.io

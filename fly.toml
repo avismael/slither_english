@@ -11,7 +11,7 @@ PORT = "3000"
 auto_start_machines = true
 auto_stop_machines = false
 force_https = true
-internal_port = 8_080
+internal_port = 3000
 min_machines_running = 1
 processes = [ "app" ]
 
@@ -19,4 +19,3 @@ processes = [ "app" ]
 cpu_kind = "shared"
 cpus = 1
 memory = "512mb"
-memory_mb = 256

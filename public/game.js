@@ -37,6 +37,7 @@ let state = null;
 let camera = { x: 0, y: 0 };
 let pointer = { x: width / 2, y: height / 2 };
 let boosting = false;
+let cameraReady = false;
 let lastWord = "Let's play!";
 let particles = [];
 
@@ -102,6 +103,7 @@ function me() {
 function sendInput() {
   if (!myId) return;
   if (state && state.paused) return;
+  if (!cameraReady || document.hidden || !document.hasFocus()) return;
   const player = me();
   if (!player || !state) return;
   const worldX = camera.x + pointer.x;
@@ -113,6 +115,8 @@ function sendInput() {
 function openSettings() {
   if (myId) socket.emit("leaveGame");
   myId = null;
+  cameraReady = false;
+  boosting = false;
   particles = [];
   joinModeSelect.value = modeSelect.value;
   joinIntro.textContent = "Cambia tu nombre, color, equipo o modo y vuelve a entrar.";
@@ -128,6 +132,14 @@ function openSettings() {
 function updateCamera() {
   const player = me();
   if (!player || !state) return;
+  if (!cameraReady) {
+    camera.x = clamp(player.x - width / 2, 0, Math.max(0, state.world.w - width));
+    camera.y = clamp(player.y - height / 2, 0, Math.max(0, state.world.h - height));
+    pointer.x = width / 2 + Math.cos(player.angle) * 180;
+    pointer.y = height / 2 + Math.sin(player.angle) * 180;
+    cameraReady = true;
+    return;
+  }
   camera.x += (player.x - width / 2 - camera.x) * 0.18;
   camera.y += (player.y - height / 2 - camera.y) * 0.18;
   camera.x = clamp(camera.x, 0, Math.max(0, state.world.w - width));
@@ -480,6 +492,12 @@ addEventListener("mousedown", (event) => {
 addEventListener("mouseup", () => {
   boosting = false;
 });
+addEventListener("blur", () => {
+  boosting = false;
+});
+addEventListener("visibilitychange", () => {
+  if (document.hidden) boosting = false;
+});
 addEventListener("keydown", (event) => {
   if (event.key === "Escape") openSettings();
   if (event.key.toLowerCase() === "p") socket.emit("togglePause");
@@ -496,6 +514,9 @@ canvas.addEventListener("touchmove", (event) => {
 canvas.addEventListener("touchend", () => {
   boosting = false;
 }, { passive: true });
+canvas.addEventListener("mouseleave", () => {
+  boosting = false;
+});
 
 joinForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -516,11 +537,14 @@ speakBtn.addEventListener("click", () => speak(lastWord));
 socket.on("welcome", (payload) => populateColors(payload.colors));
 socket.on("joined", (payload) => {
   myId = payload.id;
+  cameraReady = false;
   showToast("You joined the game!");
   speak("Let's play!");
 });
 socket.on("leftGame", () => {
   myId = null;
+  cameraReady = false;
+  boosting = false;
   updateUi();
 });
 socket.on("gameState", (payload) => {
