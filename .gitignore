@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+repo_git.txt
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build and cache output
+dist/
+build/
+coverage/
+.cache/
+.parcel-cache/
+
+# Fly.io local state
+.fly/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

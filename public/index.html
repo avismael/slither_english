@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slither English Multiplayer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <main class="hud">
+    <section class="brand">
+      <h1>Slither English</h1>
+      <p>Classroom battle</p>
+    </section>
+
+    <section class="stats card">
+      <div>Score<span id="score">0</span></div>
+      <div>Length<span id="length">0</span></div>
+      <div>Players<span id="players">0</span></div>
+      <div>Mode<span id="modeLabel">Practice</span></div>
+    </section>
+
+    <section class="leaderboard card">
+      <h2>Ranking</h2>
+      <div id="leaderboardRows"></div>
+      <div class="team-scores" id="teamScores"></div>
+      <div class="challenge" id="challengeBox">
+        <h3>Challenge</h3>
+        <div id="challengeText">Switch to Teams</div>
+        <div id="challengeProgress"></div>
+      </div>
+    </section>
+  </main>
+
+  <section class="word-card card">
+    <div class="word-emoji" id="wordEmoji">🐍</div>
+    <div>
+      <div class="word" id="word">Join Game</div>
+      <div class="meaning" id="meaning">Configura tu jugador</div>
+      <div class="sentence" id="sentence">Practice English vocabulary with your class.</div>
+    </div>
+  </section>
+
+  <section class="controls card">
+    <button id="pauseBtn" class="pause">Pause</button>
+    <button id="speakBtn" class="sound">Repeat</button>
+    <select id="modeSelect" aria-label="Game mode">
+      <option value="practice">Practice</option>
+      <option value="battle">Battle</option>
+      <option value="teams">Teams</option>
+    </select>
+    <button id="modeBtn" class="mode">Change Mode</button>
+    <button id="settingsBtn" class="settings">Settings</button>
+  </section>
+
+  <section class="toast" id="toast"></section>
+
+  <section class="join-screen" id="joinScreen">
+    <form class="join-card" id="joinForm">
+      <p class="eyebrow">English Class Game</p>
+      <h2>Join Slither English</h2>
+      <p id="joinIntro">Elige nombre, color y modo para competir en ingles.</p>
+
+      <label>
+        Student name
+        <input id="nameInput" maxlength="20" autocomplete="name" placeholder="Example: Ana" required />
+      </label>
+
+      <label>
+        Snake color
+        <select id="colorSelect"></select>
+      </label>
+
+      <label>
+        Team
+        <select id="teamSelect">
+          <option value="Red Team">Red Team</option>
+          <option value="Blue Team">Blue Team</option>
+          <option value="Green Team">Green Team</option>
+          <option value="Yellow Team">Yellow Team</option>
+          <option value="Solo" selected>Solo</option>
+        </select>
+      </label>
+
+      <label>
+        Mode
+        <select id="joinModeSelect">
+          <option value="practice" selected>Practice</option>
+          <option value="battle">Battle</option>
+          <option value="teams">Teams</option>
+        </select>
+      </label>
+
+      <button type="submit" id="joinSubmit">Join Game</button>
+      <small>Tip: usa Settings o la tecla Esc para salir y cambiar la configuracion.</small>
+    </form>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

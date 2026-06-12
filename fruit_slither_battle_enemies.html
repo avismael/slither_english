@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fruit Slither Battle - English Practice Game</title>
+  <style>
+    :root{
+      --bg:#050816;
+      --panel:rgba(255,255,255,.12);
+      --panel2:rgba(255,255,255,.18);
+      --line:rgba(255,255,255,.22);
+      --text:#f8fafc;
+      --muted:#cbd5e1;
+      --green:#22c55e;
+      --blue:#38bdf8;
+      --gold:#facc15;
+      --red:#fb7185;
+      --purple:#a78bfa;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      overflow:hidden;
+      font-family:Inter, "Segoe UI", system-ui, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 20% 18%, rgba(56,189,248,.26), transparent 25%),
+        radial-gradient(circle at 78% 22%, rgba(167,139,250,.28), transparent 28%),
+        radial-gradient(circle at 50% 92%, rgba(34,197,94,.18), transparent 32%),
+        linear-gradient(135deg,#020617,#0f172a 52%,#111827);
+    }
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size:54px 54px;
+      pointer-events:none;
+    }
+    #game{
+      position:fixed;
+      inset:0;
+      width:100vw;
+      height:100vh;
+      display:block;
+      cursor:crosshair;
+      touch-action:none;
+    }
+    .hud{
+      position:fixed;
+      inset:18px 18px auto 18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      pointer-events:none;
+      z-index:4;
+    }
+    .brand,.stats,.word-card,.help,.controls,.ranking{
+      background:linear-gradient(145deg,var(--panel2),var(--panel));
+      border:1px solid var(--line);
+      border-radius:24px;
+      backdrop-filter:blur(16px);
+      box-shadow:0 18px 40px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.22);
+    }
+    .brand{
+      padding:14px 18px;
+      max-width:410px;
+    }
+    .brand h1{
+      margin:0;
+      font-size:clamp(1.7rem, 4vw, 3.1rem);
+      line-height:.9;
+      letter-spacing:-.06em;
+      background:linear-gradient(90deg,#fff,#bae6fd,#bbf7d0,#fde68a);
+      color:transparent;
+      -webkit-background-clip:text;
+      background-clip:text;
+    }
+    .brand p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-weight:700;
+      line-height:1.35;
+    }
+    .stats{
+      padding:12px;
+      display:grid;
+      grid-template-columns:repeat(4,86px);
+      gap:10px;
+      text-align:center;
+    }
+    .stat{
+      background:rgba(2,6,23,.35);
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:18px;
+      padding:10px 8px;
+      font-weight:900;
+      color:#dbeafe;
+    }
+    .stat span{
+      display:block;
+      color:#fff;
+      font-size:1.4rem;
+      margin-top:2px;
+    }
+    .word-card{
+      position:fixed;
+      left:18px;
+      bottom:18px;
+      width:min(360px, calc(100vw - 36px));
+      padding:16px;
+      display:grid;
+      grid-template-columns:78px 1fr;
+      gap:12px;
+      align-items:center;
+      z-index:4;
+      pointer-events:none;
+    }
+    .fruit-orb{
+      width:78px;
+      height:78px;
+      display:grid;
+      place-items:center;
+      border-radius:26px;
+      font-size:3.15rem;
+      background:radial-gradient(circle at 30% 20%, rgba(255,255,255,.86), rgba(255,255,255,.18) 23%, rgba(0,0,0,.15) 100%);
+      box-shadow:0 16px 28px rgba(0,0,0,.35), inset 0 2px 3px rgba(255,255,255,.7);
+    }
+    .word{
+      font-size:2rem;
+      font-weight:1000;
+      letter-spacing:-.04em;
+    }
+    .meaning{
+      color:#dbeafe;
+      font-weight:800;
+    }
+    .feedback{
+      color:#86efac;
+      font-weight:900;
+      min-height:24px;
+    }
+    .controls{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      padding:12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      z-index:4;
+      pointer-events:auto;
+      max-width:min(560px, calc(100vw - 36px));
+      justify-content:flex-end;
+    }
+    button, select{
+      border:0;
+      color:white;
+      border-radius:17px;
+      padding:12px 14px;
+      font-size:1rem;
+      font-weight:950;
+      cursor:pointer;
+      box-shadow:0 8px 0 rgba(0,0,0,.3), 0 14px 24px rgba(0,0,0,.22);
+      transition:.15s transform,.15s filter,.15s box-shadow;
+    }
+    button:hover, select:hover{filter:brightness(1.08);transform:translateY(-1px)}
+    button:active{transform:translateY(5px);box-shadow:0 3px 0 rgba(0,0,0,.3)}
+    .start{background:linear-gradient(145deg,#34d399,#16a34a)}
+    .pause{background:linear-gradient(145deg,#fde047,#f59e0b);color:#422006}
+    .reset{background:linear-gradient(145deg,#fb7185,#e11d48)}
+    .sound{background:linear-gradient(145deg,#60a5fa,#2563eb)}
+    .team{background:linear-gradient(145deg,#c084fc,#7c3aed)}
+    .enemy{background:linear-gradient(145deg,#fb7185,#7f1d1d)}
+    select{
+      background:linear-gradient(145deg,#1e293b,#020617);
+      border:1px solid rgba(255,255,255,.24);
+    }
+    .help{
+      position:fixed;
+      right:18px;
+      top:154px;
+      width:min(330px, calc(100vw - 36px));
+      padding:14px;
+      color:#e2e8f0;
+      font-weight:700;
+      line-height:1.38;
+      z-index:4;
+      pointer-events:none;
+    }
+    .help strong{color:#fde68a}
+    .ranking{
+      position:fixed;
+      left:50%;
+      top:18px;
+      transform:translateX(-50%);
+      padding:12px 16px;
+      z-index:4;
+      pointer-events:none;
+      min-width:270px;
+      text-align:left;
+    }
+    .ranking-title{
+      font-weight:1000;
+      color:#fde68a;
+      margin-bottom:6px;
+      text-align:center;
+    }
+    .rank-row{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      font-weight:850;
+      color:#e2e8f0;
+      font-size:.92rem;
+      padding:2px 0;
+    }
+    .rank-row.player{color:#86efac}
+    .mini-map{
+      position:fixed;
+      right:18px;
+      top:18px;
+      width:128px;
+      height:128px;
+      border-radius:24px;
+      background:rgba(2,6,23,.42);
+      border:1px solid rgba(255,255,255,.24);
+      box-shadow:0 18px 36px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.18);
+      z-index:5;
+      pointer-events:none;
+    }
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:10;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:20px;
+      background:rgba(2,6,23,.72);
+      backdrop-filter:blur(12px);
+    }
+    .modal{
+      width:min(660px,100%);
+      background:linear-gradient(145deg,rgba(255,255,255,.2),rgba(255,255,255,.09));
+      border:1px solid rgba(255,255,255,.34);
+      border-radius:34px;
+      padding:30px;
+      text-align:center;
+      box-shadow:0 35px 90px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .modal h2{
+      margin:0 0 10px;
+      font-size:3rem;
+      letter-spacing:-.06em;
+      background:linear-gradient(90deg,#fff,#fde68a,#bbf7d0);
+      color:transparent;
+      -webkit-background-clip:text;
+      background-clip:text;
+    }
+    .modal p{
+      color:#e2e8f0;
+      font-size:1.08rem;
+      font-weight:700;
+      line-height:1.5;
+    }
+    .hidden{display:none}
+    @media(max-width:980px){
+      .stats{grid-template-columns:repeat(4,67px)}
+      .stat{font-size:.72rem;padding:8px 5px}
+      .stat span{font-size:1.08rem}
+      .help{display:none}
+      .ranking{display:none}
+      .brand{max-width:calc(100vw - 170px)}
+      .brand p{display:none}
+      .controls{left:18px;right:18px;justify-content:center}
+      .word-card{bottom:112px}
+    }
+    @media(max-width:560px){
+      .brand h1{font-size:1.45rem}
+      .brand{padding:11px 12px}
+      .mini-map{width:92px;height:92px;border-radius:18px}
+      .stats{position:fixed;top:105px;left:18px;grid-template-columns:repeat(4,1fr);width:calc(100vw - 36px)}
+      .word-card{grid-template-columns:62px 1fr;bottom:142px}
+      .fruit-orb{width:62px;height:62px;font-size:2.5rem;border-radius:20px}
+      .word{font-size:1.55rem}
+      button,select{padding:10px 11px;font-size:.88rem}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <canvas id="miniMap" class="mini-map" width="128" height="128"></canvas>
+
+  <div class="hud">
+    <section class="brand">
+      <h1>Fruit Slither Battle</h1>
+      <p>Compite contra serpientes IA, come frutas y practica vocabulario en inglés.</p>
+    </section>
+    <section class="stats">
+      <div class="stat">Score<span id="score">0</span></div>
+      <div class="stat">Length<span id="length">0</span></div>
+      <div class="stat">Speed<span id="speed">1.0x</span></div>
+      <div class="stat">Enemies<span id="enemyCount">0</span></div>
+    </section>
+  </div>
+
+  <section class="ranking" id="ranking">
+    <div class="ranking-title">🏆 Ranking</div>
+    <div id="rankingRows"></div>
+  </section>
+
+  <section class="help">
+    <strong>Nuevo:</strong> ahora hay enemigos aleatorios. Buscan frutas, crecen, compiten por puntos y aparecen de nuevo si chocan.
+    <br><br>
+    <strong>Clase:</strong> cuando tú comas una fruta, todos repiten la palabra en inglés.
+  </section>
+
+  <section class="word-card">
+    <div class="fruit-orb" id="fruitEmoji">🍎</div>
+    <div>
+      <div class="word" id="word">Apple</div>
+      <div class="meaning" id="meaning">Manzana</div>
+      <div class="feedback" id="feedback">Press Start!</div>
+    </div>
+  </section>
+
+  <section class="controls">
+    <button class="start" id="startBtn">▶ Start</button>
+    <button class="pause" id="pauseBtn">⏸ Pause</button>
+    <button class="reset" id="resetBtn">🔄 Reset</button>
+    <button class="sound" id="speakBtn">🔊 Repeat</button>
+    <select id="modeSelect">
+      <option value="class" selected>Class Practice</option>
+      <option value="challenge">Challenge</option>
+      <option value="young">Young Learners</option>
+    </select>
+    <select id="enemySelect">
+      <option value="2">2 Enemies</option>
+      <option value="4" selected>4 Enemies</option>
+      <option value="6">6 Enemies</option>
+      <option value="8">8 Enemies</option>
+    </select>
+    <button class="team" id="teamBtn">🏆 Team Mode</button>
+  </section>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2>Battle Mode 🐍⚔️</h2>
+      <p>Ahora el juego incluye enemigos aleatorios con inteligencia básica: buscan frutas, crecen, compiten por puntos, evitan bordes y reaparecen después de chocar.</p>
+      <p><strong>Objetivo de clase:</strong> gana puntos comiendo frutas y repite cada palabra en inglés.</p>
+      <button class="start" id="modalStart">Let’s play!</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const mini = document.getElementById("miniMap");
+    const mctx = mini.getContext("2d");
+
+    const scoreEl = document.getElementById("score");
+    const lengthEl = document.getElementById("length");
+    const speedEl = document.getElementById("speed");
+    const enemyCountEl = document.getElementById("enemyCount");
+    const fruitEmojiEl = document.getElementById("fruitEmoji");
+    const wordEl = document.getElementById("word");
+    const meaningEl = document.getElementById("meaning");
+    const feedbackEl = document.getElementById("feedback");
+    const rankingRows = document.getElementById("rankingRows");
+    const overlay = document.getElementById("overlay");
+    const modeSelect = document.getElementById("modeSelect");
+    const enemySelect = document.getElementById("enemySelect");
+
+    const fruits = [
+      { emoji:"🍎", en:"Apple", es:"Manzana", color:"#ef4444" },
+      { emoji:"🍌", en:"Banana", es:"Banano", color:"#facc15" },
+      { emoji:"🍊", en:"Orange", es:"Naranja", color:"#fb923c" },
+      { emoji:"🍓", en:"Strawberry", es:"Fresa", color:"#e11d48" },
+      { emoji:"🍇", en:"Grapes", es:"Uvas", color:"#8b5cf6" },
+      { emoji:"🍉", en:"Watermelon", es:"Sandía", color:"#22c55e" },
+      { emoji:"🍍", en:"Pineapple", es:"Piña", color:"#eab308" },
+      { emoji:"🥭", en:"Mango", es:"Mango", color:"#f97316" },
+      { emoji:"🍐", en:"Pear", es:"Pera", color:"#84cc16" },
+      { emoji:"🍑", en:"Peach", es:"Durazno", color:"#fb7185" },
+      { emoji:"🥝", en:"Kiwi", es:"Kiwi", color:"#65a30d" },
+      { emoji:"🍒", en:"Cherries", es:"Cerezas", color:"#dc2626" },
+      { emoji:"🍋", en:"Lemon", es:"Limón", color:"#fde047" },
+      { emoji:"🥥", en:"Coconut", es:"Coco", color:"#a16207" },
+      { emoji:"🫐", en:"Blueberries", es:"Arándanos", color:"#3b82f6" }
+    ];
+
+    const enemyNames = ["Berry Bot", "Mango Max", "Kiwi King", "Apple Ace", "Lemon Leo", "Coco Dash", "Grape Ghost", "Peach Pro"];
+    const enemyPalettes = [
+      {a:"#fca5a5", b:"#ef4444", c:"#7f1d1d"},
+      {a:"#bfdbfe", b:"#3b82f6", c:"#1e3a8a"},
+      {a:"#ddd6fe", b:"#8b5cf6", c:"#4c1d95"},
+      {a:"#fed7aa", b:"#f97316", c:"#7c2d12"},
+      {a:"#fef08a", b:"#eab308", c:"#713f12"},
+      {a:"#fecdd3", b:"#f43f5e", c:"#881337"},
+      {a:"#ccfbf1", b:"#14b8a6", c:"#134e4a"},
+      {a:"#e9d5ff", b:"#a855f7", c:"#581c87"}
+    ];
+
+    const modes = {
+      class:{ baseSpeed:2.4, maxSpeed:5.2, fruitCount:85, goal:20, turn:0.085, boost:1.75, enemyBase:2.05 },
+      challenge:{ baseSpeed:3.0, maxSpeed:6.5, fruitCount:105, goal:30, turn:0.095, boost:1.9, enemyBase:2.65 },
+      young:{ baseSpeed:1.95, maxSpeed:4.4, fruitCount:70, goal:15, turn:0.075, boost:1.55, enemyBase:1.7 }
+    };
+
+    let W = innerWidth, H = innerHeight, DPR = Math.min(devicePixelRatio || 1, 2);
+    let world = { w:3900, h:2800 };
+    let camera = {x:0,y:0};
+    let pointer = {x:W/2,y:H/2, active:false};
+    let snake, foods, particles, enemies, score, running, paused, raf, teamMode, currentFruit;
+    let lastTime = 0;
+
+    function resize(){
+      W = innerWidth;
+      H = innerHeight;
+      DPR = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = W * DPR;
+      canvas.height = H * DPR;
+      canvas.style.width = W + "px";
+      canvas.style.height = H + "px";
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+    addEventListener("resize", resize);
+
+    function mode(){ return modes[modeSelect.value] || modes.class; }
+
+    function makeSnake(){
+      const segments = [];
+      const startX = world.w/2;
+      const startY = world.h/2;
+      for(let i=0;i<44;i++){
+        segments.push({x:startX - i*10, y:startY, r:17});
+      }
+      return {
+        id:"player",
+        name:"You",
+        type:"player",
+        x:startX,
+        y:startY,
+        angle:0,
+        segments,
+        targetLength:44,
+        radius:18,
+        score:0,
+        pulse:0,
+        palette:{a:"#dcfce7", b:"#22c55e", c:"#047857"}
+      };
+    }
+
+    function createEnemy(index){
+      const palette = enemyPalettes[index % enemyPalettes.length];
+      const name = enemyNames[index % enemyNames.length];
+
+      // Spawn far from the player when possible.
+      let x, y, attempts = 0;
+      do {
+        x = 120 + Math.random() * (world.w - 240);
+        y = 120 + Math.random() * (world.h - 240);
+        attempts++;
+      } while (snake && distance(x,y,snake.x,snake.y) < 700 && attempts < 40);
+
+      const angle = Math.random() * Math.PI * 2;
+      const length = 32 + Math.floor(Math.random() * 22);
+      const segments = [];
+      for(let i=0;i<length;i++){
+        segments.push({
+          x:x - Math.cos(angle) * i * 10,
+          y:y - Math.sin(angle) * i * 10,
+          r:16
+        });
+      }
+
+      return {
+        id:"enemy-" + index + "-" + Date.now() + "-" + Math.floor(Math.random()*9999),
+        name,
+        type:"enemy",
+        x,
+        y,
+        angle,
+        segments,
+        targetLength:length,
+        radius:17,
+        score:0,
+        pulse:Math.random()*10,
+        palette,
+        personality:{
+          vision:520 + Math.random()*380,
+          turn:0.055 + Math.random()*0.045,
+          wander:Math.random()*Math.PI*2,
+          bravery:Math.random(),
+          boostChance:0.004 + Math.random()*0.006
+        },
+        respawnTimer:0
+      };
+    }
+
+    function spawnEnemies(){
+      const count = Number(enemySelect.value);
+      enemies = [];
+      for(let i=0;i<count;i++){
+        enemies.push(createEnemy(i));
+      }
+    }
+
+    function randomFood(){
+      const data = fruits[Math.floor(Math.random()*fruits.length)];
+      return {
+        x: 90 + Math.random()*(world.w-180),
+        y: 90 + Math.random()*(world.h-180),
+        r: 18 + Math.random()*8,
+        data,
+        spin: Math.random()*Math.PI*2,
+        bob: Math.random()*Math.PI*2
+      };
+    }
+
+    function init(){
+      cancelAnimationFrame(raf);
+      snake = makeSnake();
+      foods = Array.from({length:mode().fruitCount}, randomFood);
+      particles = [];
+      score = 0;
+      running = false;
+      paused = false;
+      currentFruit = fruits[0];
+      pointer = {x:W/2, y:H/2, active:false};
+      spawnEnemies();
+      updateWord(currentFruit, "Press Start!");
+      updateUI();
+      draw(0);
+    }
+
+    function updateWord(data, feedback){
+      currentFruit = data;
+      fruitEmojiEl.textContent = data.emoji;
+      wordEl.textContent = data.en;
+      meaningEl.textContent = data.es;
+      feedbackEl.textContent = feedback || `Great! ${data.en}!`;
+    }
+
+    function speak(text){
+      if(!("speechSynthesis" in window)){
+        feedbackEl.textContent = "Speech is not supported in this browser.";
+        return;
+      }
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-US";
+      u.rate = 0.76;
+      u.pitch = 1.04;
+      speechSynthesis.speak(u);
+    }
+
+    function updateUI(){
+      const cfg = mode();
+      const speedFactor = currentSpeed(snake) / cfg.baseSpeed;
+      scoreEl.textContent = score;
+      lengthEl.textContent = Math.floor(snake.targetLength);
+      speedEl.textContent = speedFactor.toFixed(1) + "x";
+      enemyCountEl.textContent = enemies.length;
+
+      const ranking = [
+        {name:"You", score:score, player:true},
+        ...enemies.map(e => ({name:e.name, score:e.score, player:false}))
+      ].sort((a,b)=>b.score-a.score).slice(0,5);
+
+      rankingRows.innerHTML = ranking.map((r,i)=>`
+        <div class="rank-row ${r.player ? "player" : ""}">
+          <span>${i+1}. ${r.name}</span><span>${r.score}</span>
+        </div>
+      `).join("");
+    }
+
+    function currentSpeed(entity){
+      const cfg = mode();
+      const entityScore = entity.type === "player" ? score : entity.score;
+      const progressive = cfg.baseSpeed + Math.min(cfg.maxSpeed - cfg.baseSpeed, entityScore * 0.075);
+      return entity.type === "enemy"
+        ? cfg.enemyBase + Math.min(cfg.maxSpeed - cfg.enemyBase, entityScore * 0.055)
+        : progressive;
+    }
+
+    function worldPointer(){
+      return { x: camera.x + pointer.x, y: camera.y + pointer.y };
+    }
+
+    function update(dt){
+      if(!running || paused) return;
+
+      updatePlayer(dt);
+      updateEnemies(dt);
+      handleCollisions();
+      updateParticles(dt);
+
+      camera.x += (snake.x - W/2 - camera.x) * 0.09 * dt;
+      camera.y += (snake.y - H/2 - camera.y) * 0.09 * dt;
+      camera.x = clamp(camera.x, 0, world.w - W);
+      camera.y = clamp(camera.y, 0, world.h - H);
+
+      snake.pulse += 0.08 * dt;
+      for(const e of enemies) e.pulse += 0.08 * dt;
+
+      updateUI();
+    }
+
+    function updatePlayer(dt){
+      const cfg = mode();
+      const wp = worldPointer();
+      const desired = Math.atan2(wp.y - snake.y, wp.x - snake.x);
+      let diff = normalizeAngle(desired - snake.angle);
+      snake.angle += clamp(diff, -cfg.turn*dt, cfg.turn*dt);
+
+      const boosting = pointer.active && snake.targetLength > 36;
+      const speed = currentSpeed(snake) * (boosting ? cfg.boost : 1);
+      moveEntity(snake, speed, dt);
+
+      if(boosting && Math.random() < 0.34){
+        snake.targetLength = Math.max(36, snake.targetLength - 0.045 * dt);
+        trailParticle(snake);
+      }
+    }
+
+    function updateEnemies(dt){
+      for(let i=0;i<enemies.length;i++){
+        const enemy = enemies[i];
+
+        if(enemy.respawnTimer > 0){
+          enemy.respawnTimer -= dt;
+          if(enemy.respawnTimer <= 0){
+            enemies[i] = createEnemy(i);
+          }
+          continue;
+        }
+
+        const target = chooseEnemyTarget(enemy);
+        const desired = calculateEnemyAngle(enemy, target);
+        const diff = normalizeAngle(desired - enemy.angle);
+        enemy.angle += clamp(diff, -enemy.personality.turn * dt, enemy.personality.turn * dt);
+
+        const isBoosting = Math.random() < enemy.personality.boostChance && enemy.targetLength > 34;
+        const speed = currentSpeed(enemy) * (isBoosting ? 1.45 : 1);
+        moveEntity(enemy, speed, dt);
+
+        if(isBoosting){
+          enemy.targetLength = Math.max(32, enemy.targetLength - 0.03 * dt);
+          if(Math.random() < .24) trailParticle(enemy);
+        }
+
+        enemyEatFood(enemy);
+      }
+    }
+
+    function chooseEnemyTarget(enemy){
+      // 1. Buscar la fruta visible más cercana.
+      let nearest = null;
+      let best = Infinity;
+      for(const f of foods){
+        const d = distance(enemy.x, enemy.y, f.x, f.y);
+        if(d < enemy.personality.vision && d < best){
+          best = d;
+          nearest = f;
+        }
+      }
+
+      // 2. Si el jugador está muy cerca y el enemigo es "valiente", puede seguirlo ligeramente.
+      const playerDistance = distance(enemy.x, enemy.y, snake.x, snake.y);
+      if(enemy.personality.bravery > .72 && playerDistance < 440 && snake.targetLength < enemy.targetLength + 12){
+        return {x:snake.x, y:snake.y, type:"player"};
+      }
+
+      // 3. Si no hay fruta cercana, caminar de manera aleatoria.
+      if(!nearest){
+        enemy.personality.wander += (Math.random() - .5) * .18;
+        return {
+          x: enemy.x + Math.cos(enemy.personality.wander) * 260,
+          y: enemy.y + Math.sin(enemy.personality.wander) * 260,
+          type:"wander"
+        };
+      }
+
+      return {x:nearest.x, y:nearest.y, type:"food"};
+    }
+
+    function calculateEnemyAngle(enemy, target){
+      let desired = Math.atan2(target.y - enemy.y, target.x - enemy.x);
+
+      // Evitar bordes del mundo.
+      const margin = 190;
+      if(enemy.x < margin) desired = blendAngles(desired, 0, .55);
+      if(enemy.x > world.w - margin) desired = blendAngles(desired, Math.PI, .55);
+      if(enemy.y < margin) desired = blendAngles(desired, Math.PI/2, .55);
+      if(enemy.y > world.h - margin) desired = blendAngles(desired, -Math.PI/2, .55);
+
+      // Evitar chocar de frente con el jugador si está demasiado cerca.
+      const dPlayer = distance(enemy.x, enemy.y, snake.x, snake.y);
+      if(dPlayer < 180 && snake.targetLength >= enemy.targetLength){
+        const away = Math.atan2(enemy.y - snake.y, enemy.x - snake.x);
+        desired = blendAngles(desired, away, .65);
+      }
+
+      return desired;
+    }
+
+    function moveEntity(entity, speed, dt){
+      entity.x += Math.cos(entity.angle) * speed * dt;
+      entity.y += Math.sin(entity.angle) * speed * dt;
+      entity.x = clamp(entity.x, 28, world.w - 28);
+      entity.y = clamp(entity.y, 28, world.h - 28);
+
+      entity.segments.unshift({x:entity.x, y:entity.y, r:entity.radius});
+      while(entity.segments.length > Math.floor(entity.targetLength)){
+        entity.segments.pop();
+      }
+    }
+
+    function enemyEatFood(enemy){
+      for(let i=foods.length-1;i>=0;i--){
+        const f = foods[i];
+        const d = distance(enemy.x, enemy.y, f.x, f.y);
+        if(d < enemy.radius + f.r + 7){
+          foods.splice(i,1);
+          foods.push(randomFood());
+          enemy.score++;
+          enemy.targetLength += 5;
+          burst(f.x, f.y, enemy.palette.b, 18);
+        }
+      }
+    }
+
+    function handleCollisions(){
+      playerEatFood();
+      playerVsEnemies();
+      enemyVsEnemy();
+    }
+
+    function playerEatFood(){
+      for(let i=foods.length-1;i>=0;i--){
+        const f = foods[i];
+        const d = distance(snake.x, snake.y, f.x, f.y);
+        if(d < snake.radius + f.r + 8){
+          foods.splice(i,1);
+          foods.push(randomFood());
+          score++;
+          snake.targetLength += 6;
+          updateWord(f.data, `Great! ${f.data.en}!`);
+          speak(f.data.en);
+          burst(f.x, f.y, f.data.color, 28);
+          if(score % 5 === 0){
+            burst(snake.x, snake.y, "#facc15", 50);
+            feedbackEl.textContent = `Excellent! Speed up!`;
+          }
+          if(score >= mode().goal){
+            win();
+          }
+        }
+      }
+    }
+
+    function playerVsEnemies(){
+      for(let i=0;i<enemies.length;i++){
+        const enemy = enemies[i];
+        if(enemy.respawnTimer > 0) continue;
+
+        // Si la cabeza del jugador toca el cuerpo del enemigo, pierde parte de longitud.
+        for(let j=6;j<enemy.segments.length;j+=2){
+          const s = enemy.segments[j];
+          if(distance(snake.x, snake.y, s.x, s.y) < snake.radius + s.r * .72){
+            damagePlayer(enemy);
+            return;
+          }
+        }
+
+        // Si la cabeza del enemigo toca el cuerpo del jugador, el enemigo se reinicia.
+        for(let j=8;j<snake.segments.length;j+=2){
+          const s = snake.segments[j];
+          if(distance(enemy.x, enemy.y, s.x, s.y) < enemy.radius + s.r * .72){
+            defeatEnemy(i, enemy);
+            return;
+          }
+        }
+      }
+    }
+
+    function enemyVsEnemy(){
+      for(let i=0;i<enemies.length;i++){
+        const a = enemies[i];
+        if(a.respawnTimer > 0) continue;
+        for(let k=0;k<enemies.length;k++){
+          if(i===k) continue;
+          const b = enemies[k];
+          if(b.respawnTimer > 0) continue;
+
+          for(let j=7;j<b.segments.length;j+=4){
+            const s = b.segments[j];
+            if(distance(a.x, a.y, s.x, s.y) < a.radius + s.r * .64){
+              defeatEnemy(i, a);
+              return;
+            }
+          }
+        }
+      }
+    }
+
+    function damagePlayer(enemy){
+      snake.targetLength = Math.max(32, snake.targetLength - 12);
+      score = Math.max(0, score - 1);
+      feedbackEl.textContent = `${enemy.name} blocked you!`;
+      burst(snake.x, snake.y, "#fb7185", 55);
+      speak("Be careful!");
+      // Empuja al jugador ligeramente hacia atrás.
+      snake.x -= Math.cos(snake.angle) * 65;
+      snake.y -= Math.sin(snake.angle) * 65;
+    }
+
+    function defeatEnemy(index, enemy){
+      burst(enemy.x, enemy.y, enemy.palette.b, 80);
+      feedbackEl.textContent = `${enemy.name} crashed!`;
+      // Deja algunas frutas extra donde cayó.
+      for(let n=0;n<7;n++){
+        const data = fruits[Math.floor(Math.random()*fruits.length)];
+        foods.push({
+          x:clamp(enemy.x + (Math.random()-.5)*150, 90, world.w-90),
+          y:clamp(enemy.y + (Math.random()-.5)*150, 90, world.h-90),
+          r:15 + Math.random()*7,
+          data,
+          spin:Math.random()*Math.PI*2,
+          bob:Math.random()*Math.PI*2
+        });
+      }
+      enemy.respawnTimer = 80;
+      enemy.segments = [];
+      enemy.x = -9999;
+      enemy.y = -9999;
+    }
+
+    function trailParticle(entity){
+      if(entity.segments.length < 4) return;
+      const tail = entity.segments[entity.segments.length-1];
+      particles.push({
+        x:tail.x,
+        y:tail.y,
+        vx:(Math.random()-.5)*2,
+        vy:(Math.random()-.5)*2,
+        life:36,
+        color:entity.palette.b,
+        r:4
+      });
+    }
+
+    function updateParticles(dt){
+      for(let i=particles.length-1;i>=0;i--){
+        const p = particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        p.r *= 0.985;
+        if(p.life <= 0 || p.r < .5) particles.splice(i,1);
+      }
+    }
+
+    function burst(x,y,color,count){
+      for(let i=0;i<count;i++){
+        const a = Math.random()*Math.PI*2;
+        const s = 1 + Math.random()*5;
+        particles.push({
+          x,y,
+          vx:Math.cos(a)*s,
+          vy:Math.sin(a)*s,
+          life:28+Math.random()*24,
+          color,
+          r:3+Math.random()*5
+        });
+      }
+    }
+
+    function draw(timestamp){
+      const dt = Math.min(2.2, (timestamp - lastTime) / 16.67 || 1);
+      lastTime = timestamp;
+      update(dt);
+
+      ctx.clearRect(0,0,W,H);
+      drawWorld();
+      drawFoods(timestamp);
+      drawParticles();
+      drawAllSnakes();
+      drawMiniMap();
+
+      if(!running){
+        drawCenterText("Fruit Slither Battle", "Press Start");
+      }else if(paused){
+        drawCenterText("Paused", "Press Pause to continue");
+      }
+
+      raf = requestAnimationFrame(draw);
+    }
+
+    function drawWorld(){
+      const bg = ctx.createLinearGradient(0,0,W,H);
+      bg.addColorStop(0,"#082f49");
+      bg.addColorStop(.5,"#064e3b");
+      bg.addColorStop(1,"#1e1b4b");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0,0,W,H);
+
+      ctx.save();
+      ctx.translate(-camera.x,-camera.y);
+
+      const grid = 80;
+      ctx.strokeStyle = "rgba(255,255,255,.055)";
+      ctx.lineWidth = 1;
+      const startX = Math.floor(camera.x/grid)*grid;
+      const endX = camera.x + W + grid;
+      const startY = Math.floor(camera.y/grid)*grid;
+      const endY = camera.y + H + grid;
+      for(let x=startX;x<endX;x+=grid){
+        ctx.beginPath(); ctx.moveTo(x, camera.y-80); ctx.lineTo(x, camera.y+H+80); ctx.stroke();
+      }
+      for(let y=startY;y<endY;y+=grid){
+        ctx.beginPath(); ctx.moveTo(camera.x-80, y); ctx.lineTo(camera.x+W+80, y); ctx.stroke();
+      }
+
+      ctx.strokeStyle = "rgba(255,255,255,.45)";
+      ctx.lineWidth = 10;
+      ctx.shadowColor = "rgba(56,189,248,.45)";
+      ctx.shadowBlur = 20;
+      roundRect(ctx,20,20,world.w-40,world.h-40,34,false,true);
+      ctx.shadowBlur = 0;
+      ctx.restore();
+
+      const vignette = ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.25,W/2,H/2,Math.max(W,H)*.72);
+      vignette.addColorStop(0,"rgba(255,255,255,0)");
+      vignette.addColorStop(1,"rgba(0,0,0,.42)");
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0,0,W,H);
+    }
+
+    function drawFoods(t){
+      ctx.save();
+      ctx.translate(-camera.x,-camera.y);
+      for(const f of foods){
+        const sx = f.x - camera.x;
+        const sy = f.y - camera.y;
+        if(sx < -90 || sx > W+90 || sy < -90 || sy > H+90) continue;
+
+        const bob = Math.sin(t*.003 + f.bob)*3;
+        ctx.save();
+        ctx.translate(f.x, f.y + bob);
+        ctx.shadowColor = "rgba(0,0,0,.42)";
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetY = 8;
+
+        const orb = ctx.createRadialGradient(-f.r*.32,-f.r*.42,2,0,0,f.r*1.25);
+        orb.addColorStop(0,"rgba(255,255,255,.9)");
+        orb.addColorStop(.18,"rgba(255,255,255,.22)");
+        orb.addColorStop(1,"rgba(0,0,0,.2)");
+        ctx.fillStyle = orb;
+        ctx.beginPath();
+        ctx.arc(0,0,f.r*1.03,0,Math.PI*2);
+        ctx.fill();
+
+        ctx.font = `${f.r*1.45}px serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(f.data.emoji,0,1);
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    function drawParticles(){
+      ctx.save();
+      ctx.translate(-camera.x,-camera.y);
+      for(const p of particles){
+        ctx.globalAlpha = Math.max(0, Math.min(1, p.life/36));
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+      }
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+
+    function drawAllSnakes(){
+      for(const enemy of enemies){
+        if(enemy.respawnTimer <= 0) drawSnakeEntity(enemy, false);
+      }
+      drawSnakeEntity(snake, true);
+    }
+
+    function drawSnakeEntity(entity, isPlayer){
+      ctx.save();
+      ctx.translate(-camera.x,-camera.y);
+
+      for(let i=entity.segments.length-1;i>=0;i--){
+        const s = entity.segments[i];
+        const ratio = i / entity.segments.length;
+        const r = entity.radius * (1 - ratio*.35) + Math.sin(entity.pulse + i*.22)*.65;
+        const grad = ctx.createRadialGradient(s.x-r*.35,s.y-r*.45,2,s.x,s.y,r*1.2);
+        grad.addColorStop(0, entity.palette.a);
+        grad.addColorStop(.34, entity.palette.b);
+        grad.addColorStop(1, entity.palette.c);
+
+        ctx.shadowColor = "rgba(0,0,0,.34)";
+        ctx.shadowBlur = i === 0 ? 18 : 10;
+        ctx.shadowOffsetY = 7;
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,r,0,Math.PI*2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "rgba(255,255,255,.22)";
+        ctx.beginPath();
+        ctx.arc(s.x-r*.32,s.y-r*.38,r*.24,0,Math.PI*2);
+        ctx.fill();
+      }
+
+      drawFace(entity);
+      drawNameTag(entity, isPlayer);
+      ctx.restore();
+    }
+
+    function drawNameTag(entity, isPlayer){
+      ctx.save();
+      ctx.font = "800 15px Segoe UI, system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const text = isPlayer ? "You" : `${entity.name} ${entity.score}`;
+      const w = ctx.measureText(text).width + 22;
+      const x = entity.x;
+      const y = entity.y - 40;
+      ctx.fillStyle = isPlayer ? "rgba(22,163,74,.78)" : "rgba(15,23,42,.72)";
+      ctx.strokeStyle = "rgba(255,255,255,.25)";
+      ctx.lineWidth = 1;
+      roundRect(ctx,x-w/2,y-13,w,26,13,true,true);
+      ctx.fillStyle = "#fff";
+      ctx.fillText(text,x,y);
+      ctx.restore();
+    }
+
+    function drawFace(entity){
+      const hx = entity.x, hy = entity.y;
+      const a = entity.angle;
+      const fx = Math.cos(a), fy = Math.sin(a);
+      const px = -Math.sin(a), py = Math.cos(a);
+      const eyeBaseX = hx + fx*11;
+      const eyeBaseY = hy + fy*11;
+
+      ctx.fillStyle = "white";
+      ctx.shadowColor = "rgba(0,0,0,.35)";
+      ctx.shadowBlur = 5;
+      ctx.beginPath(); ctx.arc(eyeBaseX + px*7, eyeBaseY + py*7, 5.2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(eyeBaseX - px*7, eyeBaseY - py*7, 5.2,0,Math.PI*2); ctx.fill();
+
+      ctx.fillStyle = "#020617";
+      ctx.beginPath(); ctx.arc(eyeBaseX + px*7 + fx*1.7, eyeBaseY + py*7 + fy*1.7, 2.3,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(eyeBaseX - px*7 + fx*1.7, eyeBaseY - py*7 + fy*1.7, 2.3,0,Math.PI*2); ctx.fill();
+
+      ctx.strokeStyle = "#052e16";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(hx + fx*20, hy + fy*20);
+      ctx.lineTo(hx + fx*31 + px*5, hy + fy*31 + py*5);
+      ctx.moveTo(hx + fx*20, hy + fy*20);
+      ctx.lineTo(hx + fx*31 - px*5, hy + fy*31 - py*5);
+      ctx.stroke();
+    }
+
+    function drawMiniMap(){
+      const mw = mini.width, mh = mini.height;
+      mctx.clearRect(0,0,mw,mh);
+      const g = mctx.createLinearGradient(0,0,mw,mh);
+      g.addColorStop(0,"rgba(8,47,73,.9)");
+      g.addColorStop(1,"rgba(30,27,75,.9)");
+      mctx.fillStyle = g;
+      mctx.fillRect(0,0,mw,mh);
+
+      mctx.strokeStyle = "rgba(255,255,255,.25)";
+      mctx.lineWidth = 3;
+      roundRect(mctx,4,4,mw-8,mh-8,16,false,true);
+
+      mctx.fillStyle = "#facc15";
+      for(const f of foods.slice(0,40)){
+        mctx.globalAlpha = .75;
+        mctx.beginPath();
+        mctx.arc(f.x/world.w*mw, f.y/world.h*mh, 1.4,0,Math.PI*2);
+        mctx.fill();
+      }
+
+      for(const e of enemies){
+        if(e.respawnTimer > 0) continue;
+        mctx.globalAlpha = .95;
+        mctx.fillStyle = e.palette.b;
+        mctx.beginPath();
+        mctx.arc(e.x/world.w*mw, e.y/world.h*mh, 3.2,0,Math.PI*2);
+        mctx.fill();
+      }
+
+      mctx.globalAlpha = 1;
+      mctx.fillStyle = "#22c55e";
+      mctx.shadowColor = "#22c55e";
+      mctx.shadowBlur = 8;
+      mctx.beginPath();
+      mctx.arc(snake.x/world.w*mw, snake.y/world.h*mh, 4.8,0,Math.PI*2);
+      mctx.fill();
+      mctx.shadowBlur = 0;
+    }
+
+    function drawCenterText(text, sub){
+      ctx.save();
+      ctx.fillStyle = "rgba(2,6,23,.48)";
+      ctx.fillRect(0,0,W,H);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = "rgba(0,0,0,.55)";
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "1000 54px Segoe UI, system-ui";
+      ctx.fillText(text,W/2,H/2-28);
+      ctx.fillStyle = "#dbeafe";
+      ctx.font = "850 24px Segoe UI, system-ui";
+      ctx.fillText(sub,W/2,H/2+35);
+      ctx.restore();
+    }
+
+    function roundRect(c,x,y,w,h,r,fill,stroke){
+      c.beginPath();
+      c.moveTo(x+r,y);
+      c.arcTo(x+w,y,x+w,y+h,r);
+      c.arcTo(x+w,y+h,x,y+h,r);
+      c.arcTo(x,y+h,x,y,r);
+      c.arcTo(x,y,x+w,y,r);
+      c.closePath();
+      if(fill) c.fill();
+      if(stroke) c.stroke();
+    }
+
+    function start(){
+      if(running && !paused) return;
+      running = true;
+      paused = false;
+      overlay.classList.add("hidden");
+      feedbackEl.textContent = "Go, go, go!";
+      speak("Let's play!");
+    }
+    function pause(){
+      if(!running) return;
+      paused = !paused;
+      feedbackEl.textContent = paused ? "Paused" : "Continue!";
+    }
+    function reset(){
+      init();
+      feedbackEl.textContent = "Ready!";
+      overlay.classList.remove("hidden");
+    }
+    function win(){
+      running = false;
+      paused = false;
+      feedbackEl.textContent = "Mission completed!";
+      burst(snake.x, snake.y, "#facc15", 130);
+      speak("Excellent! Mission completed!");
+      setTimeout(()=>drawCenterText("Mission Complete!", `Score: ${score}`),20);
+    }
+
+    function setPointer(clientX, clientY, active=false){
+      pointer.x = clientX;
+      pointer.y = clientY;
+      pointer.active = active;
+    }
+
+    function distance(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+    function normalizeAngle(a){
+      while(a > Math.PI) a -= Math.PI*2;
+      while(a < -Math.PI) a += Math.PI*2;
+      return a;
+    }
+    function blendAngles(a,b,t){
+      const diff = normalizeAngle(b-a);
+      return a + diff * t;
+    }
+    function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
+
+    addEventListener("mousemove", e => setPointer(e.clientX,e.clientY, e.buttons === 1));
+    addEventListener("mousedown", e => { pointer.active = true; setPointer(e.clientX,e.clientY,true); });
+    addEventListener("mouseup", () => pointer.active = false);
+
+    canvas.addEventListener("touchstart", e => {
+      const t = e.touches[0];
+      setPointer(t.clientX,t.clientY,true);
+    }, {passive:true});
+    canvas.addEventListener("touchmove", e => {
+      const t = e.touches[0];
+      setPointer(t.clientX,t.clientY,true);
+    }, {passive:true});
+    canvas.addEventListener("touchend", () => pointer.active = false, {passive:true});
+
+    document.getElementById("startBtn").addEventListener("click", start);
+    document.getElementById("modalStart").addEventListener("click", start);
+    document.getElementById("pauseBtn").addEventListener("click", pause);
+    document.getElementById("resetBtn").addEventListener("click", reset);
+    document.getElementById("speakBtn").addEventListener("click", () => speak(currentFruit.en));
+    document.getElementById("teamBtn").addEventListener("click", () => {
+      teamMode = !teamMode;
+      document.getElementById("teamBtn").textContent = teamMode ? "🏆 Team ON" : "🏆 Team Mode";
+      feedbackEl.textContent = teamMode ? "Team Mode activated!" : "Individual Mode!";
+      updateUI();
+    });
+
+    modeSelect.addEventListener("change", () => {
+      init();
+      feedbackEl.textContent = "Mode changed. Press Start!";
+    });
+
+    enemySelect.addEventListener("change", () => {
+      spawnEnemies();
+      feedbackEl.textContent = "Enemies updated!";
+      updateUI();
+    });
+
+    document.addEventListener("keydown", e => {
+      if(e.key === " "){ e.preventDefault(); pause(); }
+      if(e.key === "Enter") start();
+      if(e.key.toLowerCase() === "r") reset();
+    });
+
+    resize();
+    init();
+  </script>
+</body>
+</html>
